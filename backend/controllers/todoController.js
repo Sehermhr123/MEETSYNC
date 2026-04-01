@@ -6,7 +6,39 @@ import mongoose from "mongoose";
 dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// Function to try multiple models with fallback
+const tryModels = async (prompt, config) => {
+  const models = [
+    "gemini-2.5-pro",
+    "gemini-flash-latest", 
+    "gemini-pro-latest",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash"
+  ];
+  
+  for (const modelName of models) {
+    try {
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt, config);
+      console.log(`✅ Successfully used model: ${modelName}`);
+      return result;
+    } catch (error) {
+      // If quota exceeded or fetch failed, try next model
+      if (error.status === 429 || 
+          (error.message && error.message.includes("quota")) ||
+          (error.message && error.message.includes("fetch failed")) ||
+          error.status === 404) {
+        console.log(`⚠️ Model ${modelName} failed (${error.status || 'network error'}), trying next model...`);
+        continue;
+      }
+      // For other errors, throw immediately
+      throw error;
+    }
+  }
+  // If all models exhausted, throw quota error
+  throw new Error("All available models have reached their daily quota limit (20 requests/day). Please try again tomorrow.");
+};
 
 /**
  * Extracts todos and a summary from a meeting conversation, then saves todos to MongoDB.
@@ -16,6 +48,13 @@ export const extractTodosAndSummary = async (req, res) => {
     const { paragraph } = req.body;
     if (!paragraph) {
       return res.status(400).json({ error: "Paragraph is required!" });
+    }
+
+    // Check if API key is configured
+    if (!process.env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY === "your_google_api_key_here") {
+      return res.status(500).json({ 
+        error: "Google API key is not configured. Please add your GOOGLE_API_KEY to the .env file." 
+      });
     }
 
     // 🔹 Generate AI prompts for todos & summary
@@ -40,14 +79,12 @@ export const extractTodosAndSummary = async (req, res) => {
 
     const promptSummary = `Summarize the key points of the following meeting conversation in a concise paragraph: "${paragraph}"`;
 
-    // 🔥 Generate AI responses (Parallel Execution)
+    // 🔥 Generate AI responses (Parallel Execution with model fallback)
     const [resultTodos, resultSummary] = await Promise.all([
-      model.generateContent({
-        contents: [{ role: "user", parts: [{ text: promptTodos }] }],
+      tryModels(promptTodos, {
         generationConfig: { maxOutputTokens: 500, temperature: 0.2 },
       }),
-      model.generateContent({
-        contents: [{ role: "user", parts: [{ text: promptSummary }] }],
+      tryModels(promptSummary, {
         generationConfig: { maxOutputTokens: 300, temperature: 0.2 },
       }),
     ]);
@@ -88,7 +125,27 @@ export const extractTodosAndSummary = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error extracting todos and summary:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    
+    // Provide more specific error messages
+    if (error.message && error.message.includes("API key")) {
+      return res.status(401).json({ 
+        error: "Invalid or missing Google API key. Please check your .env file." 
+      });
+    }
+    
+    // Handle rate limit/quota errors
+    if (error.status === 429 || (error.message && error.message.includes("quota")) || (error.message && error.message.includes("All available models"))) {
+      return res.status(429).json({ 
+        error: "API quota exceeded",
+        message: error.message || "You've reached the daily limit for the free tier (20 requests/day per model). All available models have been tried. Please try again tomorrow or upgrade your plan.",
+        details: "Each Gemini model has a separate quota of 20 requests/day. The system tried multiple models but all are currently at their limit."
+      });
+    }
+    
+    res.status(500).json({ 
+      error: "Internal Server Error",
+      message: error.message || "Failed to extract todos. Please try again." 
+    });
   }
 };
 

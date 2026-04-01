@@ -39,7 +39,10 @@ const TodoExtractor = ({ onExtract, onExtractEvents, onExtractEmails, onExtractS
       if (onExtractEmails) onExtractEmails(newEmails);
       if (onExtractSummary) onExtractSummary(newSummary);
     } catch (err) {
-      setError("Failed to extract data. Please try again.");
+      // Show specific error messages
+      const errorMessage = err.message || "Failed to extract data. Please try again.";
+      setError(errorMessage);
+      console.error("Extraction error:", err);
     } finally {
       setLoading(false);
     }
@@ -120,6 +123,19 @@ const TodoExtractor = ({ onExtract, onExtractEvents, onExtractEmails, onExtractS
       >
         {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "Extract Data"}
       </button>
+
+      {/* Error Display */}
+      {error && (
+        <div className="mt-4 p-3 bg-red-500/80 text-white rounded-lg relative z-10">
+          <p className="font-semibold">⚠️ Error:</p>
+          <p className="text-sm">{error}</p>
+          {error.includes("quota") && (
+            <p className="text-xs mt-2 opacity-90">
+              💡 Tip: The free tier allows 20 requests per day. The quota resets daily.
+            </p>
+          )}
+        </div>
+      )}
 
 
       {/* Extracted Calendar Events */}

@@ -38,15 +38,22 @@ export const scheduleReminders = () => {
 
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    
+    const tomorrowEnd = new Date(tomorrow);
+    tomorrowEnd.setHours(23, 59, 59, 999);
 
     const todos = await Todo.find({
-      "tasks.deadline": { $gte: tomorrow.setHours(0, 0, 0, 0), $lt: tomorrow.setHours(23, 59, 59, 999) },
+      "tasks.deadline": { $gte: tomorrow, $lte: tomorrowEnd },
     });
 
     for (const todo of todos) {
       for (const task of todo.tasks) {
         if (task.deadline) {
-          await sendReminderEmail(task, process.env.RECIPIENT_EMAIL);
+          const taskDeadline = new Date(task.deadline);
+          if (taskDeadline >= tomorrow && taskDeadline <= tomorrowEnd) {
+            await sendReminderEmail(task, process.env.RECIPIENT_EMAIL);
+          }
         }
       }
     }

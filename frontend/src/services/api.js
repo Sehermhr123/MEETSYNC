@@ -20,7 +20,18 @@ export const extractTodos = async (paragraph) => {
     return response.data;
   } catch (error) {
     console.error("Error extracting todos:", error);
-    return null;
+    
+    // Handle quota exceeded error
+    if (error.response?.status === 429) {
+      throw new Error(error.response.data?.message || "API quota exceeded. You've reached the daily limit (20 requests/day). Please try again tomorrow.");
+    }
+    
+    // Handle other errors
+    if (error.response?.data?.error) {
+      throw new Error(error.response.data.message || error.response.data.error);
+    }
+    
+    throw new Error(error.message || "Failed to extract todos. Please try again.");
   }
 };
 
