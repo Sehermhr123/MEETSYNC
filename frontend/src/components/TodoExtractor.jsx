@@ -56,7 +56,7 @@ const TodoExtractor = ({ onExtract, onExtractEvents, onExtractEmails, onExtractS
     if (onExtract) onExtract(newTodos);
     if (onExtractSummary) onExtractSummary(newSummary);
 
-    alert("✅ Summary generated & email sent!");
+    alert("✅ Summary generated!");
   } catch (err) {
     setError(err.message);
     console.error("Extraction error:", err);
