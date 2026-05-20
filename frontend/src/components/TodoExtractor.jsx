@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { extractTodos } from "../services/api";
 import { Loader2, Mic, ClipboardList, Calendar, Mail, FileText } from "lucide-react";
 
 const TodoExtractor = ({ onExtract, onExtractEvents, onExtractEmails, onExtractSummary }) => {
@@ -15,38 +14,56 @@ const TodoExtractor = ({ onExtract, onExtractEvents, onExtractEmails, onExtractS
   });
 
   const handleExtract = async () => {
-    if (!text.trim()) return;
-    setLoading(true);
-    setError("");
+  if (!text.trim()) return;
 
-    try {
-      const result = await extractTodos(text);
-      const newTodos = result.todos || [];
-      const newEvents = result.events || [];
-      const newEmails = result.emails || [];
-      const newSummary = result.summary || "";
+  setLoading(true);
+  setError("");
 
-      setExtractedData({ 
-        todos: newTodos, 
-        events: newEvents, 
-        emails: newEmails, 
-        summary: newSummary 
-      });
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
 
-      // ✅ Ensure extracted data updates in the parent component
-      if (onExtract) onExtract(newTodos);
-      if (onExtractEvents) onExtractEvents(newEvents);
-      if (onExtractEmails) onExtractEmails(newEmails);
-      if (onExtractSummary) onExtractSummary(newSummary);
-    } catch (err) {
-      // Show specific error messages
-      const errorMessage = err.message || "Failed to extract data. Please try again.";
-      setError(errorMessage);
-      console.error("Extraction error:", err);
-    } finally {
-      setLoading(false);
+    if (!user) {
+      setError("User not logged in");
+      return;
     }
-  };
+
+    const res = await fetch("http://localhost:5000/api/todos/extract-todos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        paragraph: text,
+        email: user.email, // 🔥 IMPORTANT
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Extraction failed");
+    }
+
+    const newTodos = data.todos || [];
+    const newSummary = data.summary || "";
+
+    setExtractedData((prev) => ({
+      ...prev,
+      todos: newTodos,
+      summary: newSummary,
+    }));
+
+    if (onExtract) onExtract(newTodos);
+    if (onExtractSummary) onExtractSummary(newSummary);
+
+    alert("✅ Summary generated & email sent!");
+  } catch (err) {
+    setError(err.message);
+    console.error("Extraction error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const startListening = () => {
     if (!("webkitSpeechRecognition" in window)) {

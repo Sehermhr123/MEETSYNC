@@ -5,59 +5,83 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Configure Nodemailer
+// ✅ Email transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,  // Your email
-    pass: process.env.EMAIL_PASS,  // App password
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
-// Function to Send Reminder Emails
-const sendReminderEmail = async (task, recipient) => {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: recipient,
-    subject: `🔔 Task Reminder: ${task.task}`,
-    text: `Reminder! Your task "${task.task}" is due tomorrow. Deadline: ${new Date(task.deadline).toLocaleDateString()}`,
-  };
-
+// ✅ Send Reminder Email
+const sendReminderEmail = async (task, email) => {
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`📧 Reminder sent for task: ${task.task}`);
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "⏰ Task Reminder",
+      text: `Reminder: Your task "${task.task}" is due tomorrow (${task.deadline})`,
+    });
+
+    console.log(`📧 Reminder sent to ${email} for task: ${task.task}`);
+    return true;
   } catch (error) {
-    console.error("❌ Error sending email:", error);
+    console.error("❌ Reminder email failed:", error.message);
+    return false;
   }
 };
 
-// Function to Schedule Daily Reminder Check
+// ✅ Helper: Compare ONLY date (ignore time)
+const isSameDate = (d1, d2) => {
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+};
+
+// ✅ Schedule Reminder
 export const scheduleReminders = () => {
-  cron.schedule("0 9 * * *", async () => { // Runs every day at 9 AM
-    console.log("🔍 Checking for upcoming task deadlines...");
+  cron.schedule("* * * * *", async () => {
+    console.log("🔍 Checking reminders...");
 
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    
-    const tomorrowEnd = new Date(tomorrow);
-    tomorrowEnd.setHours(23, 59, 59, 999);
+    try {
+      const todos = await Todo.find();
+      console.log("📊 Total Todos:", todos.length);
 
-    const todos = await Todo.find({
-      "tasks.deadline": { $gte: tomorrow, $lte: tomorrowEnd },
-    });
+      // 👉 tomorrow date (no time confusion)
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
 
-    for (const todo of todos) {
-      for (const task of todo.tasks) {
-        if (task.deadline) {
-          const taskDeadline = new Date(task.deadline);
-          if (taskDeadline >= tomorrow && taskDeadline <= tomorrowEnd) {
-            await sendReminderEmail(task, process.env.RECIPIENT_EMAIL);
+      for (const todo of todos) {
+        for (const task of todo.tasks) {
+          if (!task.deadline || task.reminderSent) continue;
+
+          const taskDate = new Date(task.deadline);
+
+          console.log("Task:", task.task);
+          console.log("Deadline:", taskDate.toDateString());
+
+          if (isSameDate(taskDate, tomorrow)) {
+            console.log("🔥 MATCH FOUND:", task.task);
+
+            const sent = await sendReminderEmail(task, todo.email);
+
+            if (sent) {
+              task.reminderSent = true;
+            }
           }
         }
+
+        await todo.save();
       }
+
+      console.log("✅ Reminder check completed");
+    } catch (error) {
+      console.error("❌ Reminder error:", error.message);
     }
   });
 
-  console.log("⏰ Reminder service scheduled (Runs every day at 9 AM)");
+  console.log("⏰ Reminder service started");
 };

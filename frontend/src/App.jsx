@@ -1,27 +1,69 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import TodosPage from "./pages/TodosPage";
 import EmailPage from "./pages/EmailPage";
 import About from "./pages/About";
 import Services from "./pages/Services";
+import AuthPage from "./pages/AuthPage";
 
 function App() {
+  const [user, setUser] = useState(null);
+
+  // ✅ Check if user is logged in
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
   return (
     <Router>
-      <Navbar /> {/* Navbar stays fixed at the top */}
-      <div className="pt-16"> {/* Push content below the navbar */}
+      {/* ✅ Show Navbar only if user logged in */}
+      {user && <Navbar />}
+
+      <div className={user ? "pt-16" : ""}>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/todopage" element={<TodosPage />} />
-          <Route path="/emails" element={<EmailPage />} /> {/* Add this line */}
-          <Route path="/about" element={<About />} /> {/* Add this line */}
-          <Route path="/services" element={<Services/>}/>
+
+          {/* 🔐 Auth Route */}
+          <Route
+            path="/auth"
+            element={!user ? <AuthPage /> : <Navigate to="/" />}
+          />
+
+          {/* 🔒 Protected Routes */}
+          <Route
+            path="/"
+            element={user ? <Home /> : <Navigate to="/auth" />}
+          />
+
+          <Route
+            path="/todopage"
+            element={user ? <TodosPage /> : <Navigate to="/auth" />}
+          />
+
+          <Route
+            path="/emails"
+            element={user ? <EmailPage /> : <Navigate to="/auth" />}
+          />
+
+          <Route
+            path="/about"
+            element={user ? <About /> : <Navigate to="/auth" />}
+          />
+
+          <Route
+            path="/services"
+            element={user ? <Services /> : <Navigate to="/auth" />}
+          />
+
         </Routes>
       </div>
     </Router>
   );
 }
-
 
 export default App;
