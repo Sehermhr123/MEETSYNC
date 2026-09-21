@@ -25,14 +25,14 @@ const safeAI = async (prompt) => {
       const responseText = result.response.text();
 
       console.log(
-        `🤖 AI RESPONSE (Attempt ${attempt}):`,
+        ` AI RESPONSE (Attempt ${attempt}):`,
         responseText
       );
 
       return responseText;
     } catch (err) {
       console.log(
-        `❌ AI attempt ${attempt}/${maxRetries} failed:`,
+        ` AI attempt ${attempt}/${maxRetries} failed:`,
         err.message
       );
 
@@ -43,7 +43,7 @@ const safeAI = async (prompt) => {
         err.message.toLowerCase().includes("quota")
       ) {
         console.log(
-          "⚠️ Gemini quota exhausted → skipping retries"
+          " Gemini quota exhausted → skipping retries"
         );
 
         return null;
@@ -51,7 +51,7 @@ const safeAI = async (prompt) => {
 
       // Retry temporary errors
       if (attempt < maxRetries) {
-        console.log("🔄 Retrying AI request...");
+        console.log(" Retrying AI request...");
 
         await new Promise((resolve) => {
           setTimeout(resolve, 2000);
@@ -61,7 +61,7 @@ const safeAI = async (prompt) => {
   }
 
   console.log(
-    "❌ AI failed after all retries → using fallback"
+    " AI failed after all retries → using fallback"
   );
 
   return null;
@@ -81,7 +81,7 @@ export const extractTodosAndSummary = async (req, res) => {
       });
     }
 
-    console.log("🔥 API HIT");
+    console.log(" API HIT");
 
     // ==================================================
     // AI TASK EXTRACTION
@@ -184,7 +184,7 @@ ${paragraph}
         }
       } catch (err) {
         console.log(
-          "⚠️ Failed to parse AI tasks:",
+          " Failed to parse AI tasks:",
           err.message
         );
       }
@@ -205,7 +205,7 @@ ${paragraph}
     // ==================================================
 
     if (todos.length === 0) {
-      console.log("⚠️ Using fallback task");
+      console.log(" Using fallback task");
 
       todos = [
         {
@@ -225,8 +225,8 @@ ${paragraph}
 
       const parsedDeadline = parseDate(dateText);
 
-      console.log("📌 Task:", t.task);
-      console.log("📅 Original deadline:", dateText);
+      console.log(" Task:", t.task);
+      console.log(" Original deadline:", dateText);
       console.log(
         "📅 Parsed deadline:",
         parsedDeadline
@@ -249,9 +249,9 @@ ${paragraph}
       tasks: parsedTodos,
     }).save();
 
-    console.log("✅ Todo saved successfully");
+    console.log(" Todo saved successfully");
     console.log(
-      "📊 Saved tasks:",
+      " Saved tasks:",
       saved.tasks.length
     );
 
@@ -264,7 +264,7 @@ ${paragraph}
       data: saved,
     });
   } catch (err) {
-    console.log("❌ ERROR:", err.message);
+    console.log(" ERROR:", err.message);
 
     return res.status(200).json({
       message: "Fallback response",
@@ -338,7 +338,7 @@ const parseDate = (dateText) => {
       );
 
       console.log(
-        "📅 TODAY parsed as:",
+        "TODAY parsed as:",
         result.toISOString()
       );
 
@@ -362,7 +362,7 @@ const parseDate = (dateText) => {
       );
 
       console.log(
-        "📅 TOMORROW parsed as:",
+        "TOMORROW parsed as:",
         result.toISOString()
       );
 
@@ -399,7 +399,7 @@ const parseDate = (dateText) => {
 
     if (!parsed) {
       console.log(
-        "⚠️ Could not parse deadline:",
+        " Could not parse deadline:",
         dateText
       );
 
@@ -430,13 +430,13 @@ const parseDate = (dateText) => {
     );
 
     console.log(
-      `📅 "${dateText}" → ${result.toISOString()}`
+      ` "${dateText}" → ${result.toISOString()}`
     );
 
     return result;
   } catch (err) {
     console.log(
-      "⚠️ Date parsing error:",
+      "Date parsing error:",
       err.message
     );
 
@@ -453,14 +453,14 @@ export const getAllTodos = async (req, res) => {
     const data = await Todo.find();
 
     console.log(
-      "📊 Total Todo Documents:",
+      " Total Todo Documents:",
       data.length
     );
 
     res.json(data);
   } catch (err) {
     console.log(
-      "❌ Error fetching todos:",
+      " Error fetching todos:",
       err.message
     );
 
@@ -478,14 +478,14 @@ export const deleteAllTodos = async (req, res) => {
   try {
     await Todo.deleteMany({});
 
-    console.log("🗑️ All todos deleted");
+    console.log(" All todos deleted");
 
     res.json({
       message: "Deleted",
     });
   } catch (err) {
     console.log(
-      "❌ Error deleting todos:",
+      "Error deleting todos:",
       err.message
     );
 
@@ -520,7 +520,7 @@ export const deleteTaskById = async (req, res) => {
     res.json(updated);
   } catch (err) {
     console.log(
-      "❌ Error deleting task:",
+      "Error deleting task:",
       err.message
     );
 

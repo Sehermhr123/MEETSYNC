@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const TodoSchema = new mongoose.Schema(
   {
-    // ✅ Add user email (VERY IMPORTANT)
+    //  Add user email (VERY IMPORTANT)
     email: {
       type: String,
       required: true,
@@ -34,7 +34,7 @@ const TodoSchema = new mongoose.Schema(
           type: Date 
         },
 
-        // ✅ NEW FIELD (prevents duplicate emails)
+        //  NEW FIELD (prevents duplicate emails)
         reminderSent: {
           type: Boolean,
           default: false,

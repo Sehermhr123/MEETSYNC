@@ -23,14 +23,14 @@ const CalendarComponent = ({ refreshTrigger }) => {
 
         const data = await response.json();
 
-        console.log("📦 Calendar API Response:", data);
+        console.log(" Calendar API Response:", data);
 
         const mappedEvents = data
           .flatMap((item) =>
             (item.tasks || []).map((task) => {
               if (!task.deadline) {
                 console.warn(
-                  "⚠️ Task has no deadline:",
+                  "Task has no deadline:",
                   task.task
                 );
                 return null;
@@ -40,7 +40,7 @@ const CalendarComponent = ({ refreshTrigger }) => {
 
               if (isNaN(eventDate.getTime())) {
                 console.warn(
-                  "⚠️ Invalid deadline:",
+                  " Invalid deadline:",
                   task.deadline
                 );
                 return null;
@@ -60,7 +60,7 @@ const CalendarComponent = ({ refreshTrigger }) => {
               const localDate = `${year}-${month}-${day}`;
 
               console.log(
-                `📅 ${task.task} → ${localDate}`
+                ` ${task.task} → ${localDate}`
               );
 
               return {
@@ -76,14 +76,14 @@ const CalendarComponent = ({ refreshTrigger }) => {
           .filter(Boolean);
 
         console.log(
-          "📅 Calendar Events:",
+          " Calendar Events:",
           mappedEvents
         );
 
         setEvents(mappedEvents);
       } catch (err) {
         console.error(
-          "❌ Calendar fetch error:",
+          "Calendar fetch error:",
           err
         );
         setError(err.message);

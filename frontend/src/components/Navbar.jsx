@@ -21,7 +21,7 @@ export default function Navbar() {
     { name: "All Todos", path: "/todopage", icon: <ListCheck size={20} /> },
   ];
 
-  // ✅ Logout function
+  //  Logout function
   const handleLogout = () => {
     localStorage.removeItem("user");
     window.location.href = "/auth";
@@ -54,7 +54,7 @@ export default function Navbar() {
             <li key={item.path}>
               <Link
                 to={item.path}
-                onClick={() => setIsOpen(false)} // ✅ close menu on click
+                onClick={() => setIsOpen(false)} // close menu on click
                 className={`flex items-center space-x-2 p-4 md:p-2 rounded-lg md:rounded-none transition-all duration-200 font-medium text-white 
                 ${
                   location.pathname === item.path
@@ -77,7 +77,7 @@ export default function Navbar() {
             </li>
           )}
 
-          {/* 🚪 Logout Button */}
+          {/*  Logout Button */}
           <li>
             <button
               onClick={handleLogout}

@@ -23,7 +23,7 @@ const EventSchema = new mongoose.Schema(
       trim: true 
     }
   },
-  { timestamps: true } // ✅ Adds createdAt & updatedAt
+  { timestamps: true } // Adds createdAt & updatedAt
 );
 
 const Event = mongoose.model("Event", EventSchema);
