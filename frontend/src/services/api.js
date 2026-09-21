@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000/api/todos"; // Update this to match your backend
+const API_BASE_URL = "https://meetsync-4dmb.onrender.com/api/todos"; // Update this to match your backend
 
 // Fetch all todos
 export const fetchTodos = async () => {

@@ -14,7 +14,7 @@ const CalendarComponent = ({ refreshTrigger }) => {
         setError(null);
 
         const response = await fetch(
-          "http://localhost:5000/api/todos/get-todos"
+          "https://meetsync-4dmb.onrender.com/api/todos/get-todos"
         );
 
         if (!response.ok) {

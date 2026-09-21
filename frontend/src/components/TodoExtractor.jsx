@@ -36,7 +36,7 @@ const TodoExtractor = ({
       }
 
       const res = await fetch(
-        "http://localhost:5000/api/todos/extract-todos",
+        "https://meetsync-4dmb.onrender.com/api/todos/extract-todos",
         {
           method: "POST",
           headers: {

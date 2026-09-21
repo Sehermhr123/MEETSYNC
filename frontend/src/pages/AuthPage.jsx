@@ -12,8 +12,8 @@ const AuthPage = () => {
     e.preventDefault();
 
     const url = isLogin
-      ? "http://localhost:5000/api/auth/login"
-      : "http://localhost:5000/api/auth/register";
+      ? "https://meetsync-4dmb.onrender.com/api/auth/login"
+      : "https://meetsync-4dmb.onrender.com/api/auth/register";
 
     try {
       const res = await fetch(url, {

@@ -15,7 +15,7 @@ const TodoApp = () => {
 
   const fetchTodos = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/todos/get-todos");
+      const res = await axios.get("https://meetsync-4dmb.onrender.com/api/todos/get-todos");
       setTodos(res.data || []);
     } catch (error) {
       console.error("Error fetching todos:", error);
@@ -31,7 +31,7 @@ const TodoApp = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/todos/extract-todos",
+        "https://meetsync-4dmb.onrender.com/api/todos/extract-todos",
         { paragraph }
       );
       setTodos(response.data.todos || []);
@@ -64,7 +64,7 @@ const TodoApp = () => {
     try {
       console.log(`Updating todo with ID: ${todoId}, status: ${status}`); // Debugging
   
-      await axios.put(`http://localhost:5000/api/todos/update-todo/${todoId}`, { status });
+      await axios.put(`https://meetsync-4dmb.onrender.com/api/todos/update-todo/${todoId}`, { status });
   
       toast.success("✅ Todo updated!");
       fetchTodos();
@@ -77,7 +77,7 @@ const TodoApp = () => {
 
   const deleteAllTodos = async () => {
     try {
-      await axios.delete("http://localhost:5000/api/todos/delete-todos");
+      await axios.delete("https://meetsync-4dmb.onrender.com/api/todos/delete-todos");
       toast.success("All todos deleted!");
       setTodos([]);
     } catch (error) {
