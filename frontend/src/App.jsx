@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import TodosPage from "./pages/TodosPage";
-import EmailPage from "./pages/EmailPage";
 import About from "./pages/About";
 import Services from "./pages/Services";
 import AuthPage from "./pages/AuthPage";
@@ -43,11 +42,6 @@ function App() {
           <Route
             path="/todopage"
             element={user ? <TodosPage /> : <Navigate to="/auth" />}
-          />
-
-          <Route
-            path="/emails"
-            element={user ? <EmailPage /> : <Navigate to="/auth" />}
           />
 
           <Route

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 
-const CalendarComponent = () => {
+const CalendarComponent = ({ refreshTrigger }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -10,35 +10,82 @@ const CalendarComponent = () => {
   useEffect(() => {
     const fetchTodos = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/todos/get-todos");
-        if (!response.ok) throw new Error("Failed to fetch todos");
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(
+          "http://localhost:5000/api/todos/get-todos"
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch todos");
+        }
 
         const data = await response.json();
-        console.log("API Response:", data);
 
-        // Extract tasks from each meeting entry
-        const mappedEvents = data.flatMap(item => 
-          (item.tasks || []).map(todo => {
-            const eventDate = new Date(todo.deadline);
+        console.log("📦 Calendar API Response:", data);
 
-            if (isNaN(eventDate.getTime())) {
-              console.warn("Invalid date found:", todo.deadline);
-              return null; // Skip invalid dates
-            }
+        const mappedEvents = data
+          .flatMap((item) =>
+            (item.tasks || []).map((task) => {
+              if (!task.deadline) {
+                console.warn(
+                  "⚠️ Task has no deadline:",
+                  task.task
+                );
+                return null;
+              }
 
-            return {
-              title: todo.task || "Untitled Task",
-              start: eventDate.toISOString().split("T")[0], // Convert to YYYY-MM-DD
-              end: eventDate.toISOString().split("T")[0],
-              description: item.summary || "No description",
-            };
-          })
-        ).filter(Boolean); // Remove null values
+              const eventDate = new Date(task.deadline);
 
-        console.log("Mapped Events:", mappedEvents);
+              if (isNaN(eventDate.getTime())) {
+                console.warn(
+                  "⚠️ Invalid deadline:",
+                  task.deadline
+                );
+                return null;
+              }
+
+              // Use UTC values to prevent timezone date shifting
+              const year = eventDate.getFullYear();
+
+              const month = String(
+                eventDate.getMonth() + 1
+              ).padStart(2, "0");
+
+              const day = String(
+                eventDate.getDate()
+              ).padStart(2, "0");
+
+              const localDate = `${year}-${month}-${day}`;
+
+              console.log(
+                `📅 ${task.task} → ${localDate}`
+              );
+
+              return {
+                id: task._id,
+                title: task.task || "Untitled Task",
+                start: localDate,
+                allDay: true,
+                description:
+                  item.summary || "No description",
+              };
+            })
+          )
+          .filter(Boolean);
+
+        console.log(
+          "📅 Calendar Events:",
+          mappedEvents
+        );
+
         setEvents(mappedEvents);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error(
+          "❌ Calendar fetch error:",
+          err
+        );
         setError(err.message);
       } finally {
         setLoading(false);
@@ -46,18 +93,39 @@ const CalendarComponent = () => {
     };
 
     fetchTodos();
-  }, []);
+  }, [refreshTrigger]);
 
   return (
     <div className="p-6 bg-gray-100 rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold mb-4 text-center">Task Calendar</h2>
+      <h2 className="text-2xl font-semibold mb-4 text-center">
+        Task Calendar
+      </h2>
 
-      {loading && <p className="text-center text-gray-600">Loading tasks...</p>}
-      {error && <p className="text-center text-red-500">{error}</p>}
-      {!loading && events.length === 0 && <p className="text-center text-gray-500">No tasks available.</p>}
+      {loading && (
+        <p className="text-center text-gray-600">
+          Loading tasks...
+        </p>
+      )}
+
+      {error && (
+        <p className="text-center text-red-500">
+          {error}
+        </p>
+      )}
+
+      {!loading && events.length === 0 && (
+        <p className="text-center text-gray-500">
+          No tasks available.
+        </p>
+      )}
 
       <div className="mt-4">
-        <FullCalendar plugins={[dayGridPlugin]} initialView="dayGridMonth" events={events} />
+        <FullCalendar
+          plugins={[dayGridPlugin]}
+          initialView="dayGridMonth"
+          events={events}
+          height="auto"
+        />
       </div>
     </div>
   );
